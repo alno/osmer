@@ -83,7 +83,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
         END IF;
       END; $$ LANGUAGE plpgsql;}
 
-    conn.exec %Q{CREATE OR REPLACE FUNCTION #{table_name}_delete(src_id BIGINT, src_tags HSTORE, src_geometry GEOMETRY) RETURNS BOOLEAN AS $$
+    conn.exec %Q{CREATE OR REPLACE FUNCTION #{table_name}_delete(src_id BIGINT) RETURNS BOOLEAN AS $$
       BEGIN
         DELETE FROM #{table_name} WHERE id = src_id;
         RETURN FOUND;
