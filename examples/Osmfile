@@ -11,8 +11,56 @@ schema :rendering, :projection => 900913 do
 
   points :place_points do
     map :place => [:city, :town, :village, :hamlet]
+  end
 
-    with :name
+  lines :roads do
+    with :ref => :string
+
+    map :highway, :man_made => :cutline
+  end
+
+  lines :rails do
+    map :railway
+  end
+
+  multipolygons :squares do
+    map :highway
+  end
+
+  lines :waterways do
+    map :waterway => [:stream, :river, :canal, :drain, :ditch], :barrier => :ditch
+  end
+
+  multipolygons :waterareas do
+    map :waterway => [:riverbank, :drain, :pond], :natural => [:water, :lake, :bay], :landuse => [:basin, :reservoir]
+  end
+
+  lines :barriers do # TODO Add boundaries
+    map :barrier, :natural => :cliff, :man_made => :enbankment
+  end
+
+  lines :powerlines do
+    map :power => :line
+  end
+
+  points :powerpoints do
+    map :power => [:tower, :pole]
+  end
+
+  multipolygons :territories do
+    map :landuse, :natural => [:wood, :scrub, :wetland, :beach]
+  end
+
+  multipolygons :buildings do
+    with :address
+
+    map :building, :power => :generator, :man_made => [:water_tower, :reservoir_covered, :tank, :water_tank, :water_works, :wastewater_plant, :tower, :communications_tower, :monitoring_station]
+  end
+
+  multipolygons :areas do
+    with :address
+
+    map :leisure, :amenity, :tourism, :shop, :office, :sport, :man_made => [:well, :water_well, :artesian_well], :historic => [:monument, :memorial, :ruins], :landuse => [:cemetery], :natural => [:spring], :multi => true
   end
 
 end

@@ -15,17 +15,7 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
       raise StandardError.new("Schema #{name} already created!") unless schema_tables(conn).empty?
     end
 
-    system "'#{binary}' -E #{projection} -j -m -G --slim -U #{db[:username]} -d #{db[:database]} -H #{db[:host]} -p '#{table_prefix}' '#{empty_file}'" or raise StandardError.new("Error creating osm2pgsql schema")
-  end
-
-  def import!(db, file)
-    db.in_transaction do |conn|
-      schema_tables(conn).each do |table|
-        conn.exec "DELETE FROM #{table}"
-      end
-    end
-
-    system "'#{binary}' -E #{projection} -j -m -G --slim -U #{db[:username]} -d #{db[:database]} -H #{db[:host]} -p '#{table_prefix}' -a '#{file}'" or raise StandardError.new("Error importing data with osm2pgsql")
+    osm2pgsql_exec db, "'#{empty_file}'", "creating osm2pgsql schema"
   end
 
   # Drop schema in given database
@@ -35,6 +25,20 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
         conn.exec "DROP TABLE IF EXISTS #{table}"
       end
     end
+  end
+
+  def import!(db, file)
+    db.in_transaction do |conn|
+      schema_tables(conn).each do |table|
+        conn.exec "DELETE FROM #{table}"
+      end
+    end
+
+    osm2pgsql_exec db, "-a '#{file}'", "importing data with osm2pgsql"
+  end
+
+  def patch!(db, file)
+    osm2pgsql_exec db, "-a '#{file}'", "importing data with osm2pgsql"
   end
 
   def attach_listener!(conn, collection, name, fields)
@@ -66,6 +70,10 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
   end
 
   private
+
+  def osm2pgsql_exec(db, tail, desc)
+    system "'#{binary}' -E #{projection} -j -m -G --slim -U #{db[:username]} -d #{db[:database]} -H #{db[:host]} -p '#{table_prefix}' #{tail}" or raise StandardError.new("Error #{desc}")
+  end
 
   def schema_tables(conn)
     res = conn.exec "select table_name from information_schema.tables where table_schema = 'public' AND table_name LIKE '#{table_prefix}_%'"
