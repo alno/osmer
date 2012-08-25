@@ -1,0 +1,66 @@
+Osmfile
+
+-----------
+
+schema :source, :type => :osm2pgsql
+
+schema :snapshot, :type => :osmosis
+
+schema :rendering, :projection => 900913, :source => :snapshot do
+
+  lines do
+  end
+
+  multilines do
+  end
+
+end
+
+== Actions
+
+osmimp create all
+osmimp create rendering
+
+osmimp drop all
+osmimp drop rendering
+
+osmimp import
+
+osmimp clear all
+
+osmimp crontab
+
+== Features
+
+* Allows reprojecting of data for rendering convenience
+
+== Concepts
+
+=== Schema
+
+Schema is a set of tables representing osm data in a common way. Examples of schemas may be:
+
+* PgSnapshot schema populated with Osmosis
+* Osm2Pgsql schema
+* Your own set of tables, representing data in convenient way
+
+All tables in schema share common projection.
+In database schemas are represented as database schemas or table prefixes depending your configuration.
+
+In code, schema is representd by an object, which have following methods:
+
+* create - to create schema in database
+* drop - to drop schema in database
+* add_listener - (optional) - to add listener to schema data, which may be used to have autoupdate functionality
+
+ApiSchema
+  collections: nodes, ways, relations
+
+GeoSchema
+  collections: points, lines, polygons
+
+listener with name <name> is a stored procedure set:
+
+  <name>_insert(id,*args)
+  <name>_update(id,*args)
+  <name>_delete(id)

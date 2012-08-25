@@ -1,0 +1,18 @@
+
+prefix :osmer
+
+schema :source, :type => :osm2pgsql, :projection => 4326
+
+schema :rendering, :projection => 900913 do
+
+  multipolygons :places do
+    map :place => [:city, :town, :village, :hamlet]
+  end
+
+  points :place_points do
+    map :place => [:city, :town, :village, :hamlet]
+
+    with :name
+  end
+
+end
