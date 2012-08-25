@@ -24,7 +24,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
 
   def drop!(db)
     db.in_transaction do |conn|
-      tables.each do |table|
+      tables.reverse.each do |table|
         drop_table! db, conn, table
       end
     end
