@@ -89,11 +89,19 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
         RETURN FOUND;
       END; $$ LANGUAGE plpgsql;}
 
-    table.source_schema.attach_listener! conn, table.source_table, table_name, [:tags, :geometry]
+    table.source_schema.attach_listener! conn, table.source_table, table_name, listener_fields
   end
 
   def drop_table!(db, conn, table)
-    conn.exec "DROP TABLE IF EXISTS #{table_prefix}_#{table.name}"
+    table_name = "#{table_prefix}_#{table.name}"
+
+    table.source_schema.detach_listener! conn, table.source_table, table_name, listener_fields
+
+    conn.exec "DROP TABLE IF EXISTS #{table_name}"
+  end
+
+  def listener_fields
+    [:tags, :geometry]
   end
 
   class Dsl < Osmer::Schema::Base::Dsl

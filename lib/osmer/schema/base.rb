@@ -39,6 +39,10 @@ class Osmer::Schema::Base
     raise StandardError.new("Not implemented")
   end
 
+  def detach_listener!(conn, collection, name, fields)
+    raise StandardError.new("Not implemented")
+  end
+
   def table_prefix
     [@ns.prefix, name].compact.join('_')
   end
