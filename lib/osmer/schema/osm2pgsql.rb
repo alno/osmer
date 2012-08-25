@@ -45,6 +45,11 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
     table  = collection_table collection
     args = fields.map{|f| collection_field(collection, f) }.join(', ')
 
+    # Drop triggers
+    conn.exec "DROP TRIGGER IF EXISTS #{name}_insert_trigger ON #{table}"
+    conn.exec "DROP TRIGGER IF EXISTS #{name}_update_trigger ON #{table}"
+    conn.exec "DROP TRIGGER IF EXISTS #{name}_delete_trigger ON #{table}"
+
     conn.exec %Q{CREATE OR REPLACE FUNCTION #{name}_insert_proxy() RETURNS trigger AS $$
       BEGIN
         PERFORM #{name}_insert(NEW.osm_id, #{args});
@@ -63,9 +68,12 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
         RETURN NULL;
       END; $$ LANGUAGE plpgsql}
 
+    # Create new triggers
     conn.exec "CREATE TRIGGER #{name}_insert_trigger AFTER INSERT ON #{table} FOR EACH ROW EXECUTE PROCEDURE #{name}_insert_proxy()"
     conn.exec "CREATE TRIGGER #{name}_update_trigger AFTER UPDATE ON #{table} FOR EACH ROW EXECUTE PROCEDURE #{name}_update_proxy()"
     conn.exec "CREATE TRIGGER #{name}_delete_trigger AFTER DELETE ON #{table} FOR EACH ROW EXECUTE PROCEDURE #{name}_delete_proxy()"
+
+    # Prepopulate dependency
     conn.exec "SELECT #{name}_insert(NEW.osm_id, #{args}) FROM #{table} NEW"
   end
 
