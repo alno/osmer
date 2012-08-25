@@ -40,9 +40,9 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
     table_indexes = { :geometry => 'GIST(geometry)' }
 
     if table.type.to_s.start_with? 'multi'
-      table_assigns[:geometry] = 'ST_Multi(src_geometry)'
+      table_assigns[:geometry] = "ST_Transform(ST_Multi(src_geometry), #{projection})"
     else
-      table_assigns[:geometry] = 'src_geometry'
+      table_assigns[:geometry] = "ST_Transform(src_geometry, #{projection})"
     end
 
     table.mappers.each do |k,v|

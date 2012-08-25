@@ -7,7 +7,7 @@ Osmer is a tool to manage local OSM database: import data, transform it to conve
 * Importing and updating data in osm2pgsql schema (osm2pgsql required)
 * Custom derived schemas for analysis or rendering convenience
 * BBox restriction of imported data
-* [in progress] Data reprojection between schemas
+* Data reprojection between schemas
 * [planned] Importing and updating data in pgsnapshot schema (osmosis required)
 * [planned] Rails-like config/database.yml support for seamless integration with webapps
 
