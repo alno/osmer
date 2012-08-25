@@ -2,10 +2,10 @@ require 'osmer/schema/base'
 
 class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
 
-  attr_accessor :binary
+  attr_accessor :osm2pgsql_binary, :bbox, :updater
 
   def initialize(*args)
-    @binary = 'osm2pgsql'
+    @osm2pgsql_binary = 'osm2pgsql'
     super
   end
 
@@ -27,18 +27,34 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
     end
   end
 
-  def import_data!(db, file)
+  def import_data!(db, file = nil)
+    raise StandardError.new("No file or updater specified") unless file or updater
+
     db.in_transaction do |conn|
       schema_tables(conn).each do |table|
         conn.exec "DELETE FROM #{table}"
       end
     end
 
-    osm2pgsql_exec db, "-a '#{file}'", "importing data with osm2pgsql"
+    if file
+      osm2pgsql_exec db, "-a '#{file}'", "importing data with osm2pgsql from #{file}"
+    else
+      updater.load_dump db, self do |f|
+        osm2pgsql_exec db, "-a '#{f}'", "importing data with osm2pgsql from #{f}"
+      end
+    end
   end
 
-  def update_data!(db, file)
-    osm2pgsql_exec db, "-a '#{file}'", "importing data with osm2pgsql"
+  def update_data!(db, file = nil)
+    raise StandardError.new("No file or updater specified") unless file or updater
+
+    if file
+      osm2pgsql_exec db, "-a '#{file}'", "importing data with osm2pgsql from #{file}"
+    else
+      updater.load_diffs db, self do |f|
+        osm2pgsql_exec db, "-a '#{f}'", "importing data with osm2pgsql from #{f}"
+      end
+    end
   end
 
   def attach_listener!(conn, collection, name, fields)
@@ -84,7 +100,17 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
   private
 
   def osm2pgsql_exec(db, tail, desc)
-    system "'#{binary}' -E #{projection} -j -m -G --slim -U #{db[:username]} -d #{db[:database]} -H #{db[:host]} -p '#{table_prefix}' #{tail}" or raise StandardError.new("Error #{desc}")
+    cmd = "'#{osm2pgsql_binary}' -j -m -G --slim -U #{db[:username]} -d #{db[:database]} -H #{db[:host]} -p '#{table_prefix}'"
+    cmd << " --bbox #{bbox.join(',')}" if bbox # Restrict import if bbox specified
+
+    case projection.to_i
+    when 4326 then cmd << ' --latlong'
+    when 900913 then cmd << ' --merc'
+    else raise StandardError.new("Unsupported projection #{projection}")
+    end
+
+    puts "#{cmd} #{tail}"
+    system "#{cmd} #{tail}" or raise StandardError.new("Error #{desc}")
   end
 
   def schema_tables(conn)
@@ -113,6 +139,16 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
 
   def empty_file
     File.expand_path("../../../../data/empty.osm", __FILE__)
+  end
+
+  class Dsl < Osmer::Schema::Base::Dsl
+
+    def updates(interval = nil, &block)
+      require 'osmer/updater'
+
+      schema.updater = Osmer::Updater.new(interval).configure(&block)
+    end
+
   end
 
 end

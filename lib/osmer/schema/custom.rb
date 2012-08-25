@@ -37,6 +37,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
     table_fields = { :id => 'INT8', :tags => 'HSTORE' }
     table_assigns = { :tags => 'src_tags' }
     table_conditions = []
+    table_indexes = { :geometry => 'GIST(geometry)' }
 
     if table.type.to_s.start_with? 'multi'
       table_assigns[:geometry] = 'ST_Multi(src_geometry)'
@@ -47,6 +48,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
     table.mappers.each do |k,v|
       table_fields.merge! v.fields
       table_assigns.merge! v.assigns
+      table_indexes.merge! v.indexes
       table_conditions |= v.conditions
     end
 
@@ -56,6 +58,10 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
 
     conn.exec "CREATE TABLE #{table_name}(#{table_fields.map{|k,v| "#{k} #{v}"}.join(', ')})"
     conn.exec "SELECT AddGeometryColumn('#{table_name}', 'geometry', #{projection}, '#{db.geometry_type table.type}', 2)"
+
+    table_indexes.each do |key,desc|
+      conn.exec "CREATE INDEX #{table_name}_#{key}_index ON #{table_name} USING #{desc}"
+    end
 
     conn.exec %Q{CREATE OR REPLACE FUNCTION #{table_name}_insert(src_id BIGINT, src_tags HSTORE, src_geometry GEOMETRY) RETURNS BOOLEAN AS $$
       BEGIN
@@ -90,6 +96,8 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
       END; $$ LANGUAGE plpgsql;}
 
     table.source_schema.attach_listener! conn, table.source_table, table_name, listener_fields
+
+    conn.exec "ANALYZE #{table_name}"
   end
 
   def drop_table!(db, conn, table)

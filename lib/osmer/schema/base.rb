@@ -50,6 +50,19 @@ class Osmer::Schema::Base
   private
 
   class Dsl < Struct.new(:schema)
+
+    def method_missing(method, *args)
+      if schema.respond_to?("#{method}=") && !args.empty?
+        if args.size > 1
+          schema.send "#{method}=", args
+        else
+          schema.send "#{method}=", args.first
+        end
+      else
+        super
+      end
+    end
+
   end
 
 end
