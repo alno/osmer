@@ -1,22 +1,31 @@
 
 prefix :osmer
 
-schema :source, :type => :osm2pgsql, :projection => 4326
+schema :source, :type => :osm2pgsql, :projection => 4326 do
+
+  bbox 36.562495, 54.367759, 36.562495, 54.775345 # It has bounding box restriction as minlon, minlat, maxlon, maxlat
+
+  updates :daily do # It may be updated on daily basis
+    dump 'http://data.gis-lab.info/osm_dump/dump/RU/RU-{today}.osm.pbf' # Where initial dump should be downloaded from here
+    diff 'http://data.gis-lab.info/osm_dump/diff/RU/RU-{yesterday}-{today}.osc.gz' # And diff should be downloaded from here
+  end
+
+end
 
 schema :rendering, :projection => 900913 do
 
-  multipolygons :places do
-    map :place => [:city, :town, :village, :hamlet]
+  multipolygons :places do # Table of place boundaries
+    map :place => [:city, :town, :village, :hamlet] # It contains features which have place tag with one of values: city, town, village, hamlet
   end
 
   points :place_points do
     map :place => [:city, :town, :village, :hamlet]
   end
 
-  lines :roads do
-    with :ref => :string
+  lines :roads do # Table of roads
+    map :highway # It contains features with highway tag
 
-    map :highway, :man_made => :cutline
+    with :ref => :string # And maps ref tag to additional table column
   end
 
   lines :rails do

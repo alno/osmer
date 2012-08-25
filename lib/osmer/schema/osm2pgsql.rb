@@ -27,7 +27,7 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
     end
   end
 
-  def import!(db, file)
+  def import_data!(db, file)
     db.in_transaction do |conn|
       schema_tables(conn).each do |table|
         conn.exec "DELETE FROM #{table}"
@@ -37,7 +37,7 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
     osm2pgsql_exec db, "-a '#{file}'", "importing data with osm2pgsql"
   end
 
-  def patch!(db, file)
+  def update_data!(db, file)
     osm2pgsql_exec db, "-a '#{file}'", "importing data with osm2pgsql"
   end
 
