@@ -34,7 +34,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
 
   def create_table!(db, conn, table)
     table_name = "#{table_prefix}_#{table.name}"
-    table_fields = { :id => 'INT8', :tags => 'HSTORE' }
+    table_fields = { :id => 'INT8 PRIMARY KEY', :tags => 'HSTORE' }
     table_assigns = { :tags => 'src_tags' }
     table_conditions = []
     table_indexes = {}
@@ -61,7 +61,12 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
     conn.exec %Q{CREATE OR REPLACE FUNCTION #{table_name}_insert(src_id BIGINT, src_tags HSTORE, src_geometry GEOMETRY) RETURNS BOOLEAN AS $$
       BEGIN
         IF #{table_condition} THEN
-          INSERT INTO #{table_name} (id, #{table_assigns_keys.join(', ')}) VALUES (src_id, #{table_assigns_values.join(', ')});
+          UPDATE #{table_name} SET #{table_assigns.map{|k,v| "#{k} = #{v}"}.join(', ')} WHERE id = src_id;
+
+          IF NOT FOUND THEN
+            INSERT INTO #{table_name} (id, #{table_assigns_keys.join(', ')}) VALUES (src_id, #{table_assigns_values.join(', ')});
+          END IF;
+
           RETURN FOUND;
         ELSE
           RETURN FALSE;

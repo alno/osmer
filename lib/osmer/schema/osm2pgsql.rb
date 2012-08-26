@@ -63,19 +63,19 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
 
     conn.exec %Q{CREATE OR REPLACE FUNCTION #{name}_insert_proxy() RETURNS trigger AS $$
       BEGIN
-        PERFORM #{name}_insert(NEW.osm_id, #{args});
+        PERFORM #{name}_insert(#{unique_id_expr(collection, 'NEW.osm_id')}, #{args});
         RETURN NULL;
       END; $$ LANGUAGE plpgsql}
 
     conn.exec %Q{CREATE OR REPLACE FUNCTION #{name}_update_proxy() RETURNS trigger AS $$
       BEGIN
-        PERFORM #{name}_update(NEW.osm_id, #{args});
+        PERFORM #{name}_update(#{unique_id_expr(collection, 'NEW.osm_id')}, #{args});
         RETURN NULL;
       END; $$ LANGUAGE plpgsql}
 
     conn.exec %Q{CREATE OR REPLACE FUNCTION #{name}_delete_proxy() RETURNS trigger AS $$
       BEGIN
-        PERFORM #{name}_delete(OLD.osm_id);
+        PERFORM #{name}_delete(#{unique_id_expr(collection, 'OLD.osm_id')});
         RETURN NULL;
       END; $$ LANGUAGE plpgsql}
 
@@ -122,6 +122,18 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
     tables = res.values.flatten
     res.clear
     tables
+  end
+
+  # Map id to unique by encoding last digit in result
+  # nodes: {id}1
+  # ways: {id}2
+  # relations: {id}3
+  def unique_id_expr(collection, id_expr)
+    case collection.to_s
+    when 'polygons', 'lines' then "CASE WHEN #{id_expr} > 0 THEN 10*#{id_expr} + 2 ELSE 3 - 10*#{id_expr} END"
+    when 'points' then "10*#{id_expr} + 1"
+    else raise StandardError.new("Unsupported collection '#{collection}'")
+    end
   end
 
   def collection_table(collection)
