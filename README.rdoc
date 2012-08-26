@@ -68,6 +68,26 @@ Schema is a set of tables representing osm data in a common way. Examples of sch
 All tables in schema share common projection.
 In database schemas are represented with table prefixes (native schemas will be supported later)
 
+=== Table
+
+=== Mapper
+
+Special mappers:
+* [name] Feature name - present by default
+* [type] Feature type - specified with `map`
+* [z_order] Order of feature in rendering - specified with `z_order`
+
+Available mappers (specified with `with`):
+
+* [string] Simple string column
+* [address] Address columns
+* [area] Polygon (or multipolygon) area
+* [length] Line (or multiline) length
+
+== Internals
+
+=== Schema
+
 In code, schema is representd by an object, which have following methods:
 
 * create! - to create schema in database
@@ -79,6 +99,15 @@ listener with name <name> is a stored procedure set:
   <name>_insert(id,*args)
   <name>_update(id,*args)
   <name>_delete(id)
+
+=== Mapper
+
+Mapper is represented by Ruby class which have methods:
+
+* [fields] hash in form of field-type to add to table
+* [assignments] hash in form of field-expression
+* [conditions] list of conditions on source data
+* [indexes] hash of indexes in form name-specification to be added
 
 == Contributors
 
