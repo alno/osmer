@@ -32,12 +32,14 @@ Database schemas definition goes to Osmfile which contains basic flags and schem
 
     multipolygons :places do # Table of place boundaries
       map :place => [:city, :town, :village, :hamlet] # It contains features which have place tag with one of values: city, town, village, hamlet
+
+      with :area # And also polygon area
     end
 
     lines :roads do # Table of roads
       map :highway # It contains features with highway tag
 
-      with :ref => :string # And maps ref tag to additional table column
+      with :length, :ref => :string # And also road length and ref tag to additional table column
     end
 
   end

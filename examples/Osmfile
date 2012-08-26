@@ -58,6 +58,8 @@ schema :rendering, :projection => 900913 do
 
   multipolygons :territories do
     map :landuse, :natural => [:wood, :scrub, :wetland, :beach]
+
+    with :area
   end
 
   multipolygons :buildings do
@@ -67,7 +69,7 @@ schema :rendering, :projection => 900913 do
   end
 
   multipolygons :areas do
-    with :address
+    with :address, :area
 
     map :leisure, :amenity, :tourism, :shop, :office, :sport, :man_made => [:well, :water_well, :artesian_well], :historic => [:monument, :memorial, :ruins], :landuse => [:cemetery], :natural => [:spring], :multi => true
   end

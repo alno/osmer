@@ -2,9 +2,10 @@ require 'osmer'
 
 class Osmer::Mapper::Base
 
-  attr_reader :name
+  attr_reader :table, :name
 
-  def initialize(name, options = {})
+  def initialize(table, name, options = {})
+    @table = table
     @name = name
   end
 

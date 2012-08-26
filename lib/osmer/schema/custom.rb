@@ -156,9 +156,13 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
       @source_schema = schema.ns.find_schema(options[:source] || schema.source || :source) or raise StandardError.new("Source schema not found")
 
       @mappers = {
-        :type => Osmer::Mapper::Type.new(:type),
-        :name => Osmer::Mapper::Name.new(:name)
+        :type => Osmer::Mapper::Type.new(self, :type),
+        :name => Osmer::Mapper::Name.new(self, :name)
       }
+    end
+
+    def projection
+      schema.projection
     end
 
     class Dsl < Struct.new(:table)
@@ -184,7 +188,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
       def add_mapper(key, type)
         require "osmer/mapper/#{type}"
 
-        table.mappers[key.to_s] = Osmer::Mapper.const_get(camelize type).new key
+        table.mappers[key.to_s] = Osmer::Mapper.const_get(camelize type).new table, key
       end
 
     end
