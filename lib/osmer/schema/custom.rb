@@ -33,6 +33,8 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
   private
 
   def create_table!(db, conn, table)
+    ns.meta.init_error_records_table conn
+
     table_name = "#{table_prefix}_#{table.name}"
     table_fields = { :id => 'INT8 PRIMARY KEY', :tags => 'HSTORE' }
     table_assigns = { :tags => 'src_tags' }
@@ -65,9 +67,11 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
 
           IF NOT FOUND THEN
             INSERT INTO #{table_name} (id, #{table_assigns_keys.join(', ')}) VALUES (src_id, #{table_assigns_values.join(', ')});
+            RETURN TRUE;
+          ELSE
+            INSERT INTO #{ns.meta.error_records_table}(ts,tbl,id,msg) VALUES (current_timestamp, '#{table_name}', src_id, 'record already exists on insert');
+            RETURN FALSE;
           END IF;
-
-          RETURN FOUND;
         ELSE
           RETURN FALSE;
         END IF;

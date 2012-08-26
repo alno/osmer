@@ -75,6 +75,13 @@ class Osmer
     create_all! db
   end
 
+  def meta
+    @meta ||= begin
+      require 'osmer/meta'
+      Osmer::Meta.new self
+    end
+  end
+
   class Dsl < Struct.new(:osmer)
 
     def schema(name, options, &block)

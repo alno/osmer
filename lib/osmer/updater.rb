@@ -56,25 +56,21 @@ class Osmer::Updater
 
   private
 
-  def meta_table(schema)
-    "#{schema.ns.prefix || 'osmer'}_schema_versions"
-  end
-
   def init_meta_table(conn, schema)
-    conn.exec "CREATE TABLE IF NOT EXISTS #{meta_table(schema)}(schema VARCHAR(255) NOT NULL PRIMARY KEY, version INT8 NOT NULL)"
+    conn.exec "CREATE TABLE IF NOT EXISTS #{schema.ns.schema_versions_table}(schema VARCHAR(255) NOT NULL PRIMARY KEY, version INT8 NOT NULL)"
   end
 
   def get_current_version(conn, schema)
-    conn.exec("SELECT version FROM #{meta_table(schema)} WHERE schema = $1", [schema.name]).values.first.first
+    conn.exec("SELECT version FROM #{schema.ns.schema_versions_table} WHERE schema = $1", [schema.name]).values.first.first
   end
 
   def reset_current_version(conn, schema)
-    conn.exec "DELETE FROM #{meta_table(schema)} WHERE schema = $1", [schema.name]
+    conn.exec "DELETE FROM #{schema.ns.schema_versions_table} WHERE schema = $1", [schema.name]
   end
 
   def set_current_version(conn, schema, version)
-    if conn.exec("UPDATE #{meta_table(schema)} SET version = $2 WHERE schema = $1", [schema.name, version]).cmdtuples == 0
-      conn.exec "INSERT INTO #{meta_table(schema)}(schema, version) VALUES ($1, $2)", [schema.name, version]
+    if conn.exec("UPDATE #{schema.ns.schema_versions_table} SET version = $2 WHERE schema = $1", [schema.name, version]).cmdtuples == 0
+      conn.exec "INSERT INTO #{schema.ns.schema_versions_table}(schema, version) VALUES ($1, $2)", [schema.name, version]
     end
   end
 
