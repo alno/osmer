@@ -37,13 +37,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
     table_fields = { :id => 'INT8', :tags => 'HSTORE' }
     table_assigns = { :tags => 'src_tags' }
     table_conditions = []
-    table_indexes = { :geometry => 'GIST(geometry)' }
-
-    if table.type.to_s.start_with? 'multi'
-      table_assigns[:geometry] = "ST_Transform(ST_Multi(src_geometry), #{projection})"
-    else
-      table_assigns[:geometry] = "ST_Transform(src_geometry, #{projection})"
-    end
+    table_indexes = {}
 
     table.mappers.each do |k,v|
       table_fields.merge! v.fields
@@ -57,8 +51,8 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
     table_condition = table_conditions.map{|c| "(#{c})"}.join(' AND ')
 
     conn.exec "CREATE TABLE #{table_name}(#{table_fields.map{|k,v| "#{k} #{v}"}.join(', ')})"
-    conn.exec "SELECT AddGeometryColumn('#{table_name}', 'geometry', #{projection}, '#{db.geometry_type table.type}', 2)"
-    conn.exec "ALTER TABLE #{table_name} ALTER COLUMN geometry SET NOT NULL"
+
+    table.mappers.each{|k,m| m.after_create db, conn, table_name }
 
     table_indexes.each do |key,desc|
       conn.exec "CREATE INDEX #{table_name}_#{key}_index ON #{table_name} USING #{desc}"
@@ -150,6 +144,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
     def initialize(schema, name, type, options)
       require 'osmer/mapper/type'
       require 'osmer/mapper/name'
+      require 'osmer/mapper/geometry'
 
       @schema, @name, @type = schema, name, type
 
@@ -158,7 +153,8 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
 
       @mappers = {
         :type => Osmer::Mapper::Type.new(self, :type),
-        :name => Osmer::Mapper::Name.new(self, :name)
+        :name => Osmer::Mapper::Name.new(self, :name),
+        :geometry => Osmer::Mapper::Geometry.new(self, :geometry)
       }
     end
 

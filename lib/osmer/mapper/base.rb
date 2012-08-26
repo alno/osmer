@@ -25,4 +25,8 @@ class Osmer::Mapper::Base
     {}
   end
 
+  # Hook which will be called after table creation
+  def after_create(db, conn, table_name)
+  end
+
 end

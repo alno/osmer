@@ -3,7 +3,7 @@ require 'osmer/mapper/base'
 class Osmer::Mapper::Length < Osmer::Mapper::Base
 
   def assigns
-    { :area => "ST_Length(ST_Transform(src_geometry,#{table.projection}))" }
+    { :area => "ST_Length(#{table.mappers[:geometry].assigns[:geometry]})" }
   end
 
   def fields
