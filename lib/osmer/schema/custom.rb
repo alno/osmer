@@ -178,17 +178,33 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
           if arg.is_a? Hash
             arg.each(&method(:add_mapper))
           else
-            add_mapper arg, arg
+            add_mapper arg
+          end
+        end
+      end
+
+      def z_order(*args)
+        mapper = add_mapper :z_order
+
+        args.each do |arg|
+          if arg.is_a? Hash
+            arg.each{ |k,v|
+              mapper[k] = v
+            }
+          else
+            mapper << arg
           end
         end
       end
 
       private
 
-      def add_mapper(key, type)
+      def add_mapper(key, type = nil)
+        type ||= key
+
         require "osmer/mapper/#{type}"
 
-        table.mappers[key.to_s] = Osmer::Mapper.const_get(camelize type).new table, key
+        table.mappers[key.to_sym] = Osmer::Mapper.const_get(camelize type).new table, key
       end
 
     end
