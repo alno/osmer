@@ -3,7 +3,7 @@ rvm:
   - 1.9.3
   - 1.8.7
 before_script:
- - sudo apt-get install postgresql-9.1-postgis
+ - sudo apt-get install postgresql-9.1-postgis osm2pgsql
 
  - createuser -D -R -S osmer
  - createdb -O osmer osmerdb

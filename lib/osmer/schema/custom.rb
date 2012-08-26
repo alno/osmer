@@ -177,7 +177,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
       def with(*args)
         args.each do |arg|
           if arg.is_a? Hash
-            arg.each(&method(:add_mapper))
+            arg.each{|k,v| add_mapper k, v }
           else
             add_mapper arg
           end
