@@ -8,8 +8,8 @@ Osmer is a tool to manage local OSM database: import data, transform it to conve
 * Custom derived schemas for analysis or rendering convenience
 * BBox restriction of imported data
 * Data reprojection between schemas
-* [planned] Importing and updating data in pgsnapshot schema (osmosis required)
 * [planned] Rails-like config/database.yml support for seamless integration with webapps
+* [planned] Importing and updating data in pgsnapshot schema (osmosis required)
 
 == Configuration
 
@@ -61,10 +61,10 @@ Schema is a set of tables representing osm data in a common way. Examples of sch
 
 * Osm2Pgsql schema
 * PgSnapshot schema populated with Osmosis
-* Your own set of tables, representing data in convenient way
+* Custom set of tables, representing data in convenient way
 
 All tables in schema share common projection.
-In database schemas are represented as database schemas or table prefixes depending your configuration.
+In database schemas are represented with table prefixes (native schemas will be supported later)
 
 In code, schema is representd by an object, which have following methods:
 
