@@ -9,8 +9,9 @@ Osmer is a tool to manage local OSM database: import data, transform it to conve
 * BBox restriction of imported data
 * Data reprojection between schemas
 * Geometry simplification
-* [planned] Rails-like config/database.yml support for seamless integration with webapps
-* [planned] Importing and updating data in pgsnapshot schema (osmosis required)
+* (planned) Native database schema support
+* (planned) Rails-like config/database.yml support for seamless integration with webapps
+* (planned) Importing and updating data in pgsnapshot schema (osmosis required)
 
 == Configuration
 
@@ -49,12 +50,20 @@ Database schemas definition goes to Osmfile which contains basic flags and schem
 
 Osmer may be used as command-line executable with following commands:
 
-* osmer schema create [SCHEMA]    # Create given osm schema in database (create all if none specified)
-* osmer schema drop [SCHEMA]      # Drop given osm schema in database (drop all if none specified)
-* osmer schema recreate [SCHEMA]  # Recreate given osm schema in database (recreate all if none specified)
+* <tt>osmer schema create [SCHEMA]</tt>    # Create given osm schema in database (create all if none specified)
+* <tt>osmer schema drop [SCHEMA]</tt>      # Drop given osm schema in database (drop all if none specified)
+* <tt>osmer schema recreate [SCHEMA]</tt>  # Recreate given osm schema in database (recreate all if none specified)
 
-* osmer data import [SCHEMA] [FILE]  # Import data to given schema from file
-* osmer data update [SCHEMA] [FILE]  # Update data in schema from given change file
+* <tt>osmer data import [SCHEMA] [FILE]</tt>  # Import data to given schema from file
+* <tt>osmer data update [SCHEMA] [FILE]</tt>  # Update data in schema from given change file
+
+Supported options:
+* -c, [--config=CONFIG] Config file location, default value <tt>Osmfile</tt>
+* -h, [--dbhost=DBHOST] Database host, default value <tt>localhost</tt>
+* -p, [--dbport=DBPORT] Database port, default value <tt>5432</tt>
+* -U, [--dbuser=DBUSER] Database user
+* -P, [--dbpass=DBPASS] Database password
+* -d, [--dbname=DBNAME] Database name
 
 == Details
 
@@ -74,12 +83,12 @@ In database schemas are represented with table prefixes (native schemas will be 
 === Mapper
 
 Special mappers:
-* [geometry] Feature geometry - present by default, configured with `simplify`
+* [geometry] Feature geometry - present by default, configured with <tt>simplify</tt>
 * [name] Feature name - present by default
-* [type] Feature type - present by default, configured with `map`
-* [z_order] Order of feature in rendering - specified with `z_order`
+* [type] Feature type - present by default, configured with <tt>map</tt>
+* [z_order] Order of feature in rendering - specified with <tt>z_order</tt>
 
-Available mappers (specified with `with`):
+Available mappers (specified with <tt>with</tt>):
 
 * [string] Simple string column
 * [address] Address columns

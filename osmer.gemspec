@@ -18,6 +18,7 @@ Gem::Specification.new do |s|
 
   # Development dependencies
   s.add_development_dependency "rspec", ">= 2.0"
+  s.add_development_dependency "yard"
 
   # Gem files
   s.files = Dir["lib/**/*.rb", "bin/*", "data/*", "MIT-LICENSE", "README.rdoc"]
