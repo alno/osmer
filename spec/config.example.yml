@@ -1,0 +1,5 @@
+dbhost: localhost
+dbport: 5432
+dbuser: osmer
+dbpass: qwerty
+dbname: osmerdb

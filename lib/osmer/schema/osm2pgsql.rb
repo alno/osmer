@@ -91,6 +91,8 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
   def detach_listener!(conn, collection, name, fields)
     table  = collection_table collection
 
+    return unless schema_tables(conn).include? table
+
     # Drop triggers
     conn.exec "DROP TRIGGER IF EXISTS #{name}_insert_trigger ON #{table}"
     conn.exec "DROP TRIGGER IF EXISTS #{name}_update_trigger ON #{table}"
@@ -108,6 +110,8 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
     when 900913 then cmd << ' --merc'
     else raise StandardError.new("Unsupported projection #{projection}")
     end
+
+    ENV['PGPASS'] = db[:password]
 
     puts "#{cmd} #{tail}"
     system "#{cmd} #{tail}" or raise StandardError.new("Error #{desc}")

@@ -17,7 +17,9 @@ Gem::Specification.new do |s|
   s.add_dependency "thor", ">= 0.14.6"
 
   # Development dependencies
-  s.add_development_dependency "rspec", ">= 2.0"
+  s.add_development_dependency "rspec", "~> 2.9.0"
+  s.add_development_dependency "rspec-steps", ">= 0.0.8"
+  s.add_development_dependency "rake"
   s.add_development_dependency "yard"
 
   # Gem files
