@@ -47,9 +47,9 @@ class Osmer::Target::Pg
       @conn = PG.connect options
     end
 
-    def exec(q)
+    def exec(q, *args)
       puts "  #{q}"
-      @conn.exec q
+      @conn.exec q, *args
     end
 
     def close

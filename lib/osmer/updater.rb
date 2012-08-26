@@ -13,15 +13,19 @@ class Osmer::Updater
     db.in_transaction do |conn|
       init_meta_table conn, schema
       cur = get_current_version conn, schema
-      diffs = get_diff_versions
 
-      while to = diffs.detect{|d| d[0].to_i == cur }
-        file = download_file diff, to
+      puts "Requesting diff versions"
+      versions = get_diff_versions
 
+      while version = versions.detect{|d| d[0] == cur }
+        puts "Downloading diff #{version.join('-')}"
+        file = download_file diff, version
+
+        puts "Applying diff #{file}"
         yield file
 
-        set_current_version conn, schema, to[0].to_i
-        cur = to[0].to_i
+        set_current_version conn, schema, version[0]
+        cur = version[0]
       end
     end
   end
@@ -29,12 +33,17 @@ class Osmer::Updater
   def load_dump(db, schema)
     db.in_transaction do |conn|
       init_meta_table conn, schema
-      to = get_dump_version
-      file = download_file dump, to
 
+      puts "Requesting last dump version"
+      version = get_dump_version
+
+      puts "Downloading dump #{version.join('-')}"
+      file = download_file dump, version
+
+      puts "Loading dump #{file}"
       yield file
 
-      set_current_version conn, schema, to[0].to_i
+      set_current_version conn, schema, version[0]
     end
   end
 
@@ -70,7 +79,7 @@ class Osmer::Updater
   end
 
   def get_diff_versions
-    get_available_versions(dump).uniq
+    get_available_versions(diff).uniq
   end
 
   def get_dump_version

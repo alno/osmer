@@ -6,7 +6,7 @@ schema :source, :type => :osm2pgsql, :projection => 4326 do
   bbox 35.962495, 54.567759, 36.262495, 54.675345 # It has bounding box restriction as minlon, minlat, maxlon, maxlat
 
   updates :daily do # It may be updated on daily basis
-    dump 'http://data.gis-lab.info/osm_dump/dump/RU/RU-{cur}.osm.pbf' # Where initial dump should be downloaded from here
+    dump 'http://data.gis-lab.info/osm_dump/dump/RU-KLU/RU-KLU-{cur}.osm.pbf' # Where initial dump should be downloaded from
     diff 'http://data.gis-lab.info/osm_dump/diff/RU/RU-{prev}-{cur}.osc.gz' # And diff should be downloaded from here
   end
 
