@@ -8,7 +8,7 @@ before_script:
  - createuser -D -R -S osmer
  - createdb -O osmer osmerdb
 
- - psql -c "ALTER USER osmer PASSWORD 'qwerty'"
+ - psql -d osmerdb -c "ALTER USER osmer PASSWORD 'qwerty'"
  - psql -d osmerdb -c "CREATE EXTENSION hstore"
  - psql -d osmerdb < /usr/share/postgresql/9.1/contrib/postgis-1.5/postgis.sql
  - psql -d osmerdb < /usr/share/postgresql/9.1/contrib/postgis-1.5/spatial_ref_sys.sql
