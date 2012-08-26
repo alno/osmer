@@ -57,7 +57,7 @@ class Osmer::Updater
   private
 
   def meta_table(schema)
-    "#{schema.ns.prefix}_schema_versions"
+    "#{schema.ns.prefix || 'osmer'}_schema_versions"
   end
 
   def init_meta_table(conn, schema)
