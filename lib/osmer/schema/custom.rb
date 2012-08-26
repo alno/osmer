@@ -69,7 +69,8 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
             INSERT INTO #{table_name} (id, #{table_assigns_keys.join(', ')}) VALUES (src_id, #{table_assigns_values.join(', ')});
             RETURN TRUE;
           ELSE
-            INSERT INTO #{ns.meta.error_records_table}(ts,tbl,id,msg) VALUES (current_timestamp, '#{table_name}', src_id, 'record already exists on insert');
+            INSERT INTO #{ns.meta.error_records_table}(ts,tbl,id,msg) VALUES (current_timestamp, '#{table_name}', src_id, 'Record already exists, updated');
+            RAISE WARNING 'Record #{table_name}(%) already exists, updated', src_id;
             RETURN FALSE;
           END IF;
         ELSE
