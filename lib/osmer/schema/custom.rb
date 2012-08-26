@@ -58,6 +58,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
 
     conn.exec "CREATE TABLE #{table_name}(#{table_fields.map{|k,v| "#{k} #{v}"}.join(', ')})"
     conn.exec "SELECT AddGeometryColumn('#{table_name}', 'geometry', #{projection}, '#{db.geometry_type table.type}', 2)"
+    conn.exec "ALTER TABLE #{table_name} ALTER COLUMN geometry SET NOT NULL"
 
     table_indexes.each do |key,desc|
       conn.exec "CREATE INDEX #{table_name}_#{key}_index ON #{table_name} USING #{desc}"
