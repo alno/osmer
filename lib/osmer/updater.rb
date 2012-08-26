@@ -24,8 +24,8 @@ class Osmer::Updater
         puts "Applying diff #{file}"
         yield file
 
-        set_current_version conn, schema, version[0]
-        cur = version[0]
+        set_current_version conn, schema, version[1]
+        cur = version[1]
       end
     end
   end
