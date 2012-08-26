@@ -8,6 +8,7 @@ Osmer is a tool to manage local OSM database: import data, transform it to conve
 * Custom derived schemas for analysis or rendering convenience
 * BBox restriction of imported data
 * Data reprojection between schemas
+* Geometry simplification
 * [planned] Rails-like config/database.yml support for seamless integration with webapps
 * [planned] Importing and updating data in pgsnapshot schema (osmosis required)
 
@@ -73,8 +74,9 @@ In database schemas are represented with table prefixes (native schemas will be 
 === Mapper
 
 Special mappers:
+* [geometry] Feature geometry - present by default, configured with `simplify`
 * [name] Feature name - present by default
-* [type] Feature type - specified with `map`
+* [type] Feature type - present by default, configured with `map`
 * [z_order] Order of feature in rendering - specified with `z_order`
 
 Available mappers (specified with `with`):

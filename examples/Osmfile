@@ -62,6 +62,14 @@ schema :rendering, :projection => 900913 do
     with :area
   end
 
+  multipolygons :territories_gen do
+    map :landuse, :natural => [:wood, :scrub, :wetland, :beach]
+
+    with :area
+
+    simplify 500
+  end
+
   multipolygons :buildings do
     map :building, :power => :generator, :man_made => [:water_tower, :reservoir_covered, :tank, :water_tank, :water_works, :wastewater_plant, :tower, :communications_tower, :monitoring_station]
 

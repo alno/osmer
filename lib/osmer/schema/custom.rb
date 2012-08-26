@@ -166,6 +166,10 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
 
       include Osmer::Utils
 
+      def simplify(tolerance)
+        table.mappers[:geometry].simplify = tolerance
+      end
+
       def map(*args)
         table.mappers[:type].add_args(*args)
       end
