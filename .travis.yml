@@ -3,7 +3,15 @@ rvm:
   - 1.9.3
   - 1.8.7
 before_script:
- - sudo apt-get install postgresql-9.1-postgis osm2pgsql
+ - sudo apt-get install build-essential libxml2-dev libgeos++-dev libpq-dev libbz2-dev proj libtool automake libprotobuf-c0-dev protobuf-c-compiler
+ - git clone https://github.com/openstreetmap/osm2pgsql.git
+ - cd osm2pgsql
+ - ./autogen.sh
+ - ./configure
+ - make
+ - sudo make install
+
+ - sudo apt-get install postgresql-9.1-postgis
 
  - createuser -D -R -S osmer
  - createdb -O osmer osmerdb
