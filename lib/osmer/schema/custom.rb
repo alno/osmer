@@ -148,6 +148,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
 
     def initialize(schema, name, type, options)
       require 'osmer/mapper/type'
+      require 'osmer/mapper/name'
 
       @schema, @name, @type = schema, name, type
 
@@ -155,7 +156,8 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
       @source_schema = schema.ns.find_schema(options[:source] || schema.source || :source) or raise StandardError.new("Source schema not found")
 
       @mappers = {
-        :type => Osmer::Mapper::Type.new(:type)
+        :type => Osmer::Mapper::Type.new(:type),
+        :name => Osmer::Mapper::Name.new(:name)
       }
     end
 
