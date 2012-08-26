@@ -31,6 +31,15 @@ describe "Osmer" do
       end
     end
 
+    it "should not import wrong data" do
+      osmer.find_schema(:src).import_data! DB, File.join(DATAPATH, 'set1.osm.pbf')
+
+      DB.in_transaction do |conn|
+        conn.exec("SELECT COUNT(1) FROM dst_roads WHERE (tags->'highway') IS NULL").values.flatten.first.to_i.should == 0
+        conn.exec("SELECT COUNT(1) FROM dst_buildings WHERE (tags->'building') IS NULL").values.flatten.first.to_i.should == 0
+      end
+    end
+
   end
 
 end
