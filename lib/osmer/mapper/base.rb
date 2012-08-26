@@ -9,7 +9,7 @@ class Osmer::Mapper::Base
   end
 
   def fields
-    { name => "VARCHAR(255)" }
+    { name => "TEXT" }
   end
 
   def assigns

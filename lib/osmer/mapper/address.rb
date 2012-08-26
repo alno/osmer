@@ -10,10 +10,10 @@ class Osmer::Mapper::Address < Osmer::Mapper::Base
   end
 
   def fields
-    { :street => "VARCHAR(255)",
-      :housenumber => 'VARCHAR(255)',
-      :city => "VARCHAR(255)",
-      :postcode => "VARCHAR(100)" }
+    { :street => "TEXT",
+      :housenumber => 'TEXT',
+      :city => "TEXT",
+      :postcode => "TEXT" }
   end
 
 end

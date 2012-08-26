@@ -21,9 +21,9 @@ class Osmer::Mapper::Type < Osmer::Mapper::Base
 
   def fields
     if @multi
-      { :type => 'VARCHAR(100) NOT NULL', :types => 'VARCHAR(100)[]' }
+      { :type => 'TEXT NOT NULL', :types => 'TEXT[]' }
     else
-      { :type => 'VARCHAR(100) NOT NULL' }
+      { :type => 'TEXT NOT NULL' }
     end
   end
 
