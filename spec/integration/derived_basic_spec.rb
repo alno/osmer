@@ -81,6 +81,57 @@ describe "Osmer" do
         conn.exec("SELECT COUNT(1) FROM osmer_error_records").values.flatten.first.to_i.should > 0
       end
     end
+
+    it "should have incomplete boundary imported" do
+      DB.in_transaction do |conn|
+        conn.exec("SELECT Sum(ST_Length(geometry)) FROM dst_boundaries WHERE id = 12540503").values.first.first.to_f.should be_between(0.05, 0.21)
+      end
+    end
+  end
+
+  steps "with boundaries as multilines on area with incomplete boundaries", :focused => true do
+
+    let(:osmer) { Osmer.new.configure File.join(DATAPATH, 'derived_boundary_multi.rb') }
+
+    it "should clear schemas" do
+      osmer.drop_all! DB
+    end
+
+    it "should recreate tables" do
+      osmer.create_all! DB
+    end
+
+    it "should have right tables database after schema creation" do
+      DB.in_transaction do |conn|
+        src_tables = conn.exec("select table_name from information_schema.tables where table_schema = 'public' AND table_name LIKE 'src_%'").values.flatten
+        src_tables.should =~ ['src_point', 'src_line', 'src_polygon', 'src_roads', 'src_nodes', 'src_ways', 'src_rels']
+
+        dst_tables = conn.exec("select table_name from information_schema.tables where table_schema = 'public' AND table_name LIKE 'dst_%'").values.flatten
+        dst_tables.should =~ ['dst_boundaries']
+      end
+    end
+
+    it "should import data" do
+      osmer.find_schema(:src).import_data! DB, File.join(DATAPATH, 'area_incomplete_boundary.osm.pbf')
+    end
+
+    it "should have right data in database after import" do
+      DB.in_transaction do |conn|
+        conn.exec("SELECT COUNT(1) FROM dst_boundaries").values.flatten.first.to_i.should > 0
+      end
+    end
+
+    it "should have no errors in log after import" do
+      DB.in_transaction do |conn|
+        conn.exec("SELECT COUNT(1) FROM osmer_error_records").values.flatten.first.to_i.should == 0
+      end
+    end
+
+    it "should have complete boundary imported" do
+      DB.in_transaction do |conn|
+        conn.exec("SELECT Sum(ST_Length(geometry)) FROM dst_boundaries WHERE id = 12540503").values.first.first.to_f.should be_between(0.26, 0.27)
+      end
+    end
   end
 
 end

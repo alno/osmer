@@ -60,23 +60,40 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
       conn.exec "CREATE INDEX #{table_name}_#{key}_index ON #{table_name} USING #{desc}"
     end
 
-    conn.exec %Q{CREATE OR REPLACE FUNCTION #{table_name}_insert(src_id BIGINT, src_tags HSTORE, src_geometry GEOMETRY) RETURNS BOOLEAN AS $$
-      BEGIN
-        IF #{table_condition} THEN
-          UPDATE #{table_name} SET #{table_assigns.map{|k,v| "#{k} = #{v}"}.join(', ')} WHERE id = src_id;
+    if table.multi_geometry?
+      conn.exec %Q{CREATE OR REPLACE FUNCTION #{table_name}_insert(src_id BIGINT, src_tags HSTORE, src_geometry GEOMETRY) RETURNS BOOLEAN AS $$
+        BEGIN
+          IF #{table_condition} THEN
+            UPDATE #{table_name} SET geometry = ST_Union(geometry, #{table_assigns[:geometry]}), #{table_assigns.reject{|k,v| k == :geometry }.map{|k,v| "#{k} = #{v}"}.join(', ')} WHERE id = src_id;
 
-          IF NOT FOUND THEN
-            INSERT INTO #{table_name} (id, #{table_assigns_keys.join(', ')}) VALUES (src_id, #{table_assigns_values.join(', ')});
+            IF NOT FOUND THEN
+              INSERT INTO #{table_name} (id, #{table_assigns_keys.join(', ')}) VALUES (src_id, #{table_assigns_values.join(', ')});
+            END IF;
+
             RETURN TRUE;
           ELSE
-            INSERT INTO #{ns.meta.error_records_table}(ts,tbl,id,msg) VALUES (current_timestamp, '#{table_name}', src_id, 'Record already exists, updated');
-            RAISE WARNING 'Record #{table_name}(%) already exists, updated', src_id;
             RETURN FALSE;
           END IF;
-        ELSE
-          RETURN FALSE;
-        END IF;
-      END; $$ LANGUAGE plpgsql;}
+        END; $$ LANGUAGE plpgsql;}
+    else
+      conn.exec %Q{CREATE OR REPLACE FUNCTION #{table_name}_insert(src_id BIGINT, src_tags HSTORE, src_geometry GEOMETRY) RETURNS BOOLEAN AS $$
+        BEGIN
+          IF #{table_condition} THEN
+            UPDATE #{table_name} SET #{table_assigns.map{|k,v| "#{k} = #{v}"}.join(', ')} WHERE id = src_id;
+
+            IF NOT FOUND THEN
+              INSERT INTO #{table_name} (id, #{table_assigns_keys.join(', ')}) VALUES (src_id, #{table_assigns_values.join(', ')});
+              RETURN TRUE;
+            ELSE
+              INSERT INTO #{ns.meta.error_records_table}(ts,tbl,id,msg) VALUES (current_timestamp, '#{table_name}', src_id, 'Record already exists, updated');
+              RAISE WARNING 'Record #{table_name}(%) already exists, updated', src_id;
+              RETURN FALSE;
+            END IF;
+          ELSE
+            RETURN FALSE;
+          END IF;
+        END; $$ LANGUAGE plpgsql;}
+    end
 
     conn.exec %Q{CREATE OR REPLACE FUNCTION #{table_name}_update(src_id BIGINT, src_tags HSTORE, src_geometry GEOMETRY) RETURNS BOOLEAN AS $$
       BEGIN
@@ -166,6 +183,10 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
         :name => Osmer::Mapper::Name.new(self, :name),
         :geometry => Osmer::Mapper::Geometry.new(self, :geometry)
       }
+    end
+
+    def multi_geometry?
+      type.to_s.start_with? 'multi'
     end
 
     def projection
