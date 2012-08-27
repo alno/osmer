@@ -36,8 +36,8 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
     ns.meta.init_error_records_table conn
 
     table_name = "#{table_prefix}_#{table.name}"
-    table_fields = { :id => 'INT8 PRIMARY KEY', :tags => 'HSTORE' }
-    table_assigns = { :tags => 'src_tags' }
+    table_fields = { :id => 'INT8 PRIMARY KEY' }
+    table_assigns = {}
     table_conditions = []
     table_indexes = {}
 
@@ -169,6 +169,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
     attr_reader :schema, :name, :type, :source_schema, :source_table, :mappers
 
     def initialize(schema, name, type, options)
+      require 'osmer/mapper/tags'
       require 'osmer/mapper/type'
       require 'osmer/mapper/name'
       require 'osmer/mapper/geometry'
@@ -181,6 +182,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
       @mappers = {
         :type => Osmer::Mapper::Type.new(self, :type),
         :name => Osmer::Mapper::Name.new(self, :name),
+        :tags => Osmer::Mapper::Tags.new(self, :tags),
         :geometry => Osmer::Mapper::Geometry.new(self, :geometry)
       }
     end
@@ -212,6 +214,12 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
           else
             add_mapper arg
           end
+        end
+      end
+
+      def without(*args)
+        args.each do |arg|
+          table.mappers.delete arg.to_sym
         end
       end
 
