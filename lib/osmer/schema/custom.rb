@@ -136,6 +136,11 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
 
   class Dsl < Osmer::Schema::Base::Dsl
 
+    def initialize(*args)
+      super
+      @defaults = []
+    end
+
     def multipolygons(name, options = {}, &block)
       table name, :multipolygons, options, &block
     end
@@ -157,7 +162,14 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
     end
 
     def table(name, type, options, &block)
-      schema.tables << Table.new(schema, name, type, options).configure(&block)
+      defs = @defaults
+      schema.tables << Table.new(schema, name, type, options).configure{ defs.each{|d| send(*d)} }.configure(&block)
+    end
+
+    [:with, :without, :simplify, :z_order].each do |method|
+      define_method method do |*args|
+        @defaults << [method, *args]
+      end
     end
 
   end
@@ -199,9 +211,6 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
 
       include Osmer::Utils
 
-      def simplify(tolerance)
-        table.mappers[:geometry].simplify = tolerance
-      end
 
       def map(*args)
         table.mappers[:type].add_args(*args)
@@ -221,6 +230,10 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
         args.each do |arg|
           table.mappers.delete arg.to_sym
         end
+      end
+
+      def simplify(tolerance)
+        table.mappers[:geometry].simplify = tolerance
       end
 
       def z_order(*args)
@@ -244,7 +257,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
 
         require "osmer/mapper/#{type}"
 
-        table.mappers[key.to_sym] = Osmer::Mapper.const_get(camelize type).new table, key
+        table.mappers[key.to_sym] ||= Osmer::Mapper.const_get(camelize type).new table, key
       end
 
     end

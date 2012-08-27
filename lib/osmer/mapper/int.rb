@@ -7,7 +7,7 @@ class Osmer::Mapper::Int < Osmer::Mapper::Base
   end
 
   def assigns
-    { name => "CASE WHEN (src_tags->'#{name}') ~ E'^[\\\\d\\\\s]+$' THEN replace(src_tags->'#{name}',' ','')::INTEGER ELSE NULL END" }
+    { name => "CASE WHEN (src_tags->'#{name}') ~ E'^[-+]?[\\\\d\\\\s]+$' THEN replace(src_tags->'#{name}',' ','')::INTEGER ELSE NULL END" }
   end
 
 end
