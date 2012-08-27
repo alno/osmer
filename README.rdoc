@@ -120,6 +120,12 @@ Mapper is represented by Ruby class which have methods:
 * [conditions] list of conditions on source data
 * [indexes] hash of indexes in form name-specification to be added
 
+==== Advanced mapper usage
+
+  with do
+    int :layer, :null => false, :default => 0
+  end
+
 == Contributors
 
 See https://github.com/alno/osmer/graphs/contributors

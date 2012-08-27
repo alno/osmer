@@ -211,12 +211,11 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
 
       include Osmer::Utils
 
-
       def map(*args)
         table.mappers[:type].add_args(*args)
       end
 
-      def with(*args)
+      def with(*args, &block)
         args.each do |arg|
           if arg.is_a? Hash
             arg.each{|k,v| add_mapper k, v }
@@ -224,6 +223,8 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
             add_mapper arg
           end
         end
+
+        MapperDsl.new(table).instance_eval(&block) if block
       end
 
       def without(*args)
@@ -258,6 +259,17 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
         require "osmer/mapper/#{type}"
 
         table.mappers[key.to_sym] ||= Osmer::Mapper.const_get(camelize type).new table, key
+      end
+
+    end
+
+    class MapperDsl < Struct.new(:table)
+
+      include Osmer::Utils
+
+      def method_missing(type, key, *args, &block)
+        require "osmer/mapper/#{type}"
+        table.mappers[key.to_sym] ||= Osmer::Mapper.const_get(camelize type).new(table, key, *args, &block)
       end
 
     end
