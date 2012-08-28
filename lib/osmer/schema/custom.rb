@@ -36,7 +36,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
     ns.meta.init_error_records_table conn
 
     table_name = "#{table_prefix}_#{table.name}"
-    table_fields = { :id => 'INT8 PRIMARY KEY' }
+    table_fields = {}
     table_assigns = {}
     table_conditions = []
     table_indexes = {}
@@ -52,7 +52,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
     table_assigns_values = table_assigns_keys.map{|k| table_assigns[k] }
     table_condition = table_conditions.map{|c| "(#{c})"}.join(' AND ')
 
-    conn.exec "CREATE TABLE #{table_name}(#{table_fields.map{|k,v| "#{k} #{v}"}.join(', ')})"
+    conn.exec "CREATE TABLE #{table_name}(id INT8 PRIMARY KEY, #{table_fields.map{|k,v| "#{k} #{v}"}.join(', ')})"
 
     table.mappers.each{|k,m| m.after_create db, conn, table_name }
 
@@ -60,51 +60,63 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
       conn.exec "CREATE INDEX #{table_name}_#{key}_index ON #{table_name} USING #{desc}"
     end
 
-    if table.multi_geometry?
-      conn.exec %Q{CREATE OR REPLACE FUNCTION #{table_name}_insert(src_id BIGINT, src_tags HSTORE, src_geometry GEOMETRY) RETURNS BOOLEAN AS $$
-        BEGIN
-          IF #{table_condition} THEN
-            UPDATE #{table_name} SET geometry = ST_Union(geometry, #{table_assigns[:geometry]}), #{table_assigns.reject{|k,v| k == :geometry }.map{|k,v| "#{k} = #{v}"}.join(', ')} WHERE id = src_id;
+    declare_sql = table_fields.map{|k,v| "dst_#{k} #{v.gsub('NOT NULL','')};" }.join(' ') + ' dst_geometry GEOMETRY;'
+    assign_sql = table_assigns.map{|k,v| "dst_#{k} := #{v};"}.join(' ')
 
-            IF NOT FOUND THEN
-              INSERT INTO #{table_name} (id, #{table_assigns_keys.join(', ')}) VALUES (src_id, #{table_assigns_values.join(', ')});
-            END IF;
+    insert_sql = if table.multi_geometry?
+      %Q{
+        UPDATE #{table_name} SET geometry = ST_Union(geometry, dst_geometry), #{(table_assigns_keys - [:geometry]).map{|k| "#{k} = dst_#{k}"}.join(', ')} WHERE id = src_id;
 
-            RETURN TRUE;
-          ELSE
-            RETURN FALSE;
-          END IF;
-        END; $$ LANGUAGE plpgsql;}
+        IF NOT FOUND THEN
+          INSERT INTO #{table_name} (id, #{table_assigns_keys.join(', ')}) VALUES (src_id, #{table_assigns_keys.map{|k| "dst_#{k}"}.join(', ')});
+        END IF;
+
+        RETURN TRUE;
+      }
     else
-      conn.exec %Q{CREATE OR REPLACE FUNCTION #{table_name}_insert(src_id BIGINT, src_tags HSTORE, src_geometry GEOMETRY) RETURNS BOOLEAN AS $$
-        BEGIN
-          IF #{table_condition} THEN
-            UPDATE #{table_name} SET #{table_assigns.map{|k,v| "#{k} = #{v}"}.join(', ')} WHERE id = src_id;
+      %Q{
+        UPDATE #{table_name} SET #{table_assigns_keys.map{|k| "#{k} = dst_#{k}"}.join(', ')} WHERE id = src_id;
 
-            IF NOT FOUND THEN
-              INSERT INTO #{table_name} (id, #{table_assigns_keys.join(', ')}) VALUES (src_id, #{table_assigns_values.join(', ')});
-              RETURN TRUE;
-            ELSE
-              INSERT INTO #{ns.meta.error_records_table}(ts,tbl,id,msg) VALUES (current_timestamp, '#{table_name}', src_id, 'Record already exists, updated');
-              RAISE WARNING 'Record #{table_name}(%) already exists, updated', src_id;
-              RETURN FALSE;
-            END IF;
-          ELSE
-            RETURN FALSE;
-          END IF;
-        END; $$ LANGUAGE plpgsql;}
+        IF NOT FOUND THEN
+          INSERT INTO #{table_name} (id, #{table_assigns_keys.join(', ')}) VALUES (src_id, #{table_assigns_keys.map{|k| "dst_#{k}"}.join(', ')});
+          RETURN TRUE;
+        ELSE
+          INSERT INTO #{ns.meta.error_records_table}(ts,tbl,id,msg) VALUES (current_timestamp, '#{table_name}', src_id, 'Record already exists, updated');
+          RAISE WARNING 'Record #{table_name}(%) already exists, updated', src_id;
+          RETURN FALSE;
+        END IF;
+      }
     end
 
-    conn.exec %Q{CREATE OR REPLACE FUNCTION #{table_name}_update(src_id BIGINT, src_tags HSTORE, src_geometry GEOMETRY) RETURNS BOOLEAN AS $$
+    update_sql = %Q{
+      UPDATE #{table_name} SET #{table_assigns_keys.map{|k| "#{k} = dst_#{k}"}.join(', ')} WHERE id = src_id;
+
+      IF NOT FOUND THEN
+        INSERT INTO #{table_name} (id, #{table_assigns_keys.join(', ')}) VALUES (src_id, #{table_assigns_keys.map{|k| "dst_#{k}"}.join(', ')});
+      END IF;
+
+      RETURN FOUND;
+    }
+
+    conn.exec %Q{CREATE OR REPLACE FUNCTION #{table_name}_insert(src_id BIGINT, src_tags HSTORE, src_geometry GEOMETRY) RETURNS BOOLEAN AS $$
+      DECLARE
+        #{declare_sql}
       BEGIN
         IF #{table_condition} THEN
-          UPDATE #{table_name} SET #{table_assigns.map{|k,v| "#{k} = #{v}"}.join(', ')} WHERE id = src_id;
+          #{assign_sql}
+          #{insert_sql}
+        ELSE
+          RETURN FALSE;
+        END IF;
+      END; $$ LANGUAGE plpgsql;}
 
-          IF NOT FOUND THEN
-            INSERT INTO #{table_name} (id, #{table_assigns_keys.join(', ')}) VALUES (src_id, #{table_assigns_values.join(', ')});
-          END IF;
-
-          RETURN FOUND;
+    conn.exec %Q{CREATE OR REPLACE FUNCTION #{table_name}_update(src_id BIGINT, src_tags HSTORE, src_geometry GEOMETRY) RETURNS BOOLEAN AS $$
+      DECLARE
+        #{declare_sql}
+      BEGIN
+        IF #{table_condition} THEN
+          #{assign_sql}
+          #{update_sql}
         ELSE
           DELETE FROM #{table_name} WHERE id = src_id;
           RETURN FOUND;
