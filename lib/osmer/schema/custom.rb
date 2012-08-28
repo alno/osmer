@@ -249,6 +249,10 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
         table.mappers[:geometry].simplify = tolerance
       end
 
+      def buffer(distance)
+        table.mappers[:geometry].buffer = distance
+      end
+
       def z_order(*args)
         mapper = add_mapper :z_order
 

@@ -13,6 +13,8 @@ schema :dst, :projection => 900913, :source => :src do
     map :building
 
     with :address
+
+    buffer 300
   end
 
 end

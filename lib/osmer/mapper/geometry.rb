@@ -2,7 +2,7 @@ require 'osmer/mapper/base'
 
 class Osmer::Mapper::Geometry < Osmer::Mapper::Base
 
-  attr_accessor :simplify
+  attr_accessor :simplify, :buffer
 
   def assigns
     { :geometry => expr }
@@ -29,9 +29,10 @@ class Osmer::Mapper::Geometry < Osmer::Mapper::Base
 
   def expr
     res = "src_geometry"
-    res = "ST_Multi(#{res})" if table.type.to_s.start_with? 'multi'
     res = "ST_Transform(#{res}, #{table.projection})"
+    res = "ST_Buffer(#{res}, #{buffer.to_f})" if buffer
     res = "ST_Simplify(#{res}, #{simplify.to_f})" if simplify
+    res = "ST_Multi(#{res})" if table.type.to_s.start_with? 'multi'
     res
   end
 
