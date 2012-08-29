@@ -30,8 +30,11 @@ describe "Osmer" do
 
     it "should have right data in database after import" do
       DB.in_transaction do |conn|
-        conn.exec("SELECT COUNT(1) FROM dst_roads").values.flatten.first.to_i.should > 0
-        conn.exec("SELECT COUNT(1) FROM dst_buildings").values.flatten.first.to_i.should > 0
+        @road_ids = conn.exec("SELECT id FROM dst_roads").values.flatten
+        @road_ids.should_not be_empty
+
+        @building_ids = conn.exec("SELECT id FROM dst_buildings").values.flatten
+        @building_ids.should_not be_empty
       end
     end
 
@@ -39,6 +42,17 @@ describe "Osmer" do
       DB.in_transaction do |conn|
         conn.exec("SELECT COUNT(1) FROM dst_roads WHERE (tags->'highway') IS NULL").values.flatten.first.to_i.should == 0
         conn.exec("SELECT COUNT(1) FROM dst_buildings WHERE (tags->'building') IS NULL").values.flatten.first.to_i.should == 0
+      end
+    end
+
+    it "after recreating derived tables" do
+      osmer.find_schema(:dst).recreate! DB
+    end
+
+    it "should contain same features" do
+      DB.in_transaction do |conn|
+        conn.exec("SELECT id FROM dst_roads").values.flatten.should =~ @road_ids
+        conn.exec("SELECT id FROM dst_buildings").values.flatten.should =~ @building_ids
       end
     end
 
@@ -89,7 +103,7 @@ describe "Osmer" do
     end
   end
 
-  steps "with boundaries as multilines on area with incomplete boundaries", :focused => true do
+  steps "with boundaries as multilines on area with incomplete boundaries" do
 
     let(:osmer) { Osmer.new.configure File.join(DATAPATH, 'derived_boundary_multi.rb') }
 

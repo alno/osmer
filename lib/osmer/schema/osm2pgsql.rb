@@ -85,7 +85,7 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
     conn.exec "CREATE TRIGGER #{name}_delete_trigger AFTER DELETE ON #{table} FOR EACH ROW EXECUTE PROCEDURE #{name}_delete_proxy()"
 
     # Prepopulate dependency
-    conn.exec "SELECT #{name}_insert(NEW.osm_id, #{args}) FROM #{table} NEW"
+    conn.exec "SELECT #{name}_insert(#{unique_id_expr(collection, 'NEW.osm_id')}, #{args}) FROM #{table} NEW"
   end
 
   def detach_listener!(conn, collection, name, fields)
