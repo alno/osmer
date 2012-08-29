@@ -27,9 +27,9 @@ class Osmer::Schema::Base
     raise StandardError.new("Not implemented")
   end
 
-  def recreate!(db)
-    drop! db
-    create! db
+  def recreate!(db, colls = [])
+    drop! db, colls
+    create! db, colls
   end
 
   # Add collection listener

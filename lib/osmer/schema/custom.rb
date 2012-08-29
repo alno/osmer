@@ -14,18 +14,18 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
     Dsl.new(self)
   end
 
-  def create!(db)
+  def create!(db, colls = [])
     db.in_transaction do |conn|
       tables.each do |table|
-        create_table! db, conn, table
+        create_table! db, conn, table if colls.include? table.name.to_s
       end
     end
   end
 
-  def drop!(db)
+  def drop!(db, colls = [])
     db.in_transaction do |conn|
       tables.reverse.each do |table|
-        drop_table! db, conn, table
+        drop_table! db, conn, table if colls.include? table.name.to_s
       end
     end
   end
