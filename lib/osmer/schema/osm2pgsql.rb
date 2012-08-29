@@ -10,7 +10,7 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
   end
 
   # Create schema in given database
-  def create!(db, colls = [])
+  def create!(db, colls = nil)
     db.in_transaction do |conn|
       raise StandardError.new("Schema #{name} already created!") unless schema_tables(conn).empty?
     end
@@ -19,7 +19,7 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
   end
 
   # Drop schema in given database
-  def drop!(db, colls = [])
+  def drop!(db, colls = nil)
     db.in_transaction do |conn|
       schema_tables(conn).each do |table|
         conn.exec "DROP TABLE IF EXISTS #{table}"
