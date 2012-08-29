@@ -4,6 +4,7 @@ class Osmer
   module Mapper; end
   module Schema; end
   module Target; end
+  module Conds; end
 
   module Utils
 

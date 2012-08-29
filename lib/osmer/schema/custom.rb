@@ -48,6 +48,10 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
       table_conditions |= v.conditions
     end
 
+    table.conds.each do |c|
+      table_conditions |= c.conditions
+    end
+
     table_assigns_keys = table_assigns.keys.to_a
     table_assigns_values = table_assigns_keys.map{|k| table_assigns[k] }
     table_condition = table_conditions.map{|c| "(#{c})"}.join(' AND ')
@@ -190,19 +194,21 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
 
     include Osmer::Configurable
 
-    attr_reader :schema, :name, :type, :source_schema, :source_table, :mappers
+    attr_reader :schema, :name, :type, :source_schema, :source_table, :mappers, :conds
 
     def initialize(schema, name, type, options)
       require 'osmer/mapper/tags'
       require 'osmer/mapper/type'
       require 'osmer/mapper/name'
       require 'osmer/mapper/geometry'
+      require 'osmer/conds/field'
 
       @schema, @name, @type = schema, name, type
 
       @source_table = type.to_s.gsub(/\Amulti/,'')
       @source_schema = schema.ns.find_schema(options[:source] || schema.source || :source) or raise StandardError.new("Source schema not found")
 
+      @conds = []
       @mappers = {
         :type => Osmer::Mapper::Type.new(self, :type),
         :name => Osmer::Mapper::Name.new(self, :name),
@@ -242,6 +248,12 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
       def without(*args)
         args.each do |arg|
           table.mappers.delete arg.to_sym
+        end
+      end
+
+      def where(conds = {})
+        conds.each do |k,v|
+          table.conds << Osmer::Conds::Field.new(table, k, v)
         end
       end
 
