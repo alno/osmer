@@ -13,4 +13,15 @@ class Osmer::Data::App < Osmer::ThorBase
     osmer.find_schema(schema).update_data! db, file
   end
 
+  desc "count [SCHEMA]", "Count data in given schema (or in all schemas)"
+  def count(schema = nil)
+    res = if schema
+      osmer.find_schema(schema).count_data! db
+    else
+      osmer.count_data! db
+    end
+
+    puts res.inspect
+  end
+
 end

@@ -57,6 +57,16 @@ class Osmer::Schema::Osm2pgsql < Osmer::Schema::Base
     end
   end
 
+  def count_data!(db)
+    db.in_transaction do |conn|
+      Hash[['polygons', 'lines', 'points'].map do |c|
+        table = collection_table c
+        count = conn.exec("SELECT COUNT(1) FROM #{table}").values.first.first
+        [c, count]
+      end]
+    end
+  end
+
   def attach_listener!(conn, collection, name, fields)
     table  = collection_table collection
     args = fields.map{|f| collection_field(collection, f) }.join(', ')

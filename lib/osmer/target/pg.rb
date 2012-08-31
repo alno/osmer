@@ -19,10 +19,9 @@ class Osmer::Target::Pg
 
     begin
       conn.exec "BEGIN TRANSACTION"
-
-      yield conn
-
+      res = yield conn
       conn.exec "COMMIT"
+      res
     ensure
       conn.close
     end

@@ -30,6 +30,16 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
     end
   end
 
+  def count_data!(db)
+    db.in_transaction do |conn|
+      Hash[tables.map do |table|
+        table_name = "#{table_prefix}_#{table.name}"
+        count = conn.exec("SELECT COUNT(1) FROM #{table_name}").values.first.first
+        [table.name, count]
+      end]
+    end
+  end
+
   private
 
   def create_table!(db, conn, table)

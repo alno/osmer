@@ -71,6 +71,10 @@ class Osmer
     @schemas.reverse.each{|s| s.drop! db }
   end
 
+  def count_data!(db)
+    Hash[@schemas.map{|s| [s.name, s.count_data!(db)]}]
+  end
+
   def recreate_all!(db)
     drop_all! db
     create_all! db
