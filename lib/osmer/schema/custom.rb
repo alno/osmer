@@ -69,7 +69,7 @@ class Osmer::Schema::Custom < Osmer::Schema::Base
 
     insert_sql = if table.multi_geometry?
       %Q{
-        UPDATE #{table_name} SET geometry = ST_Union(geometry, dst_geometry), #{(table_assigns_keys - [:geometry]).map{|k| "#{k} = dst_#{k}"}.join(', ')} WHERE id = src_id;
+        UPDATE #{table_name} SET geometry = ST_Multi(ST_Union(geometry, dst_geometry)), #{(table_assigns_keys - [:geometry]).map{|k| "#{k} = dst_#{k}"}.join(', ')} WHERE id = src_id;
 
         IF NOT FOUND THEN
           INSERT INTO #{table_name} (id, #{table_assigns_keys.join(', ')}) VALUES (src_id, #{table_assigns_keys.map{|k| "dst_#{k}"}.join(', ')});
